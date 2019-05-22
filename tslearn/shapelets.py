@@ -3,8 +3,9 @@ The :mod:`tslearn.shapelets` module gathers Shapelet-based algorithms.
 
 It depends on the `keras` library for optimization.
 """
-import keras
+
 import pickle
+import keras
 from keras.models import Model
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy, binary_accuracy, binary_crossentropy
@@ -102,7 +103,7 @@ class LocalSquaredDistanceLayer(Layer):
         3D tensor with shape:
         `(batch_size, steps, n_shapelets)`
     """
-    def __init__(self, n_shapelets=1, X=None, **kwargs):
+    def __init__(self, n_shapelets, X=None, **kwargs):
         self.n_shapelets = n_shapelets
         if X is None or K._BACKEND != "tensorflow":
             self.initializer = "uniform"
@@ -127,6 +128,8 @@ class LocalSquaredDistanceLayer(Layer):
 
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[1], self.n_shapelets
+
+
 
 
 def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
@@ -173,8 +176,6 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
         n_shapelets = int(numpy.log10(n_ts * (ts_sz - shp_sz + 1) * (n_classes - 1)))
         d[shp_sz] = n_shapelets
     return d
-
-
 
 
 class ShapeletModel(BaseEstimator, ClassifierMixin):
@@ -358,6 +359,9 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
                        verbose=self.verbose_level)
         return self
 
+
+
+
     def predict(self, X):
         """Predict class for a given set of time series.
 
@@ -474,17 +478,24 @@ class ShapeletModel(BaseEstimator, ClassifierMixin):
         else:
             concatenated_features = pool_layers[0]
             concatenated_locations = pool_layers_locations[0]
+
         outputs = Dense(units=n_classes if n_classes > 2 else 1,
                         activation="softmax" if n_classes > 2 else "sigmoid",
                         kernel_regularizer=l2(self.weight_regularizer) if self.weight_regularizer > 0 else None,
                         name="classification")(concatenated_features)
+
+
         self.model = Model(inputs=inputs, outputs=outputs)
+
+
         self.transformer_model = Model(inputs=inputs, outputs=concatenated_features)
         self.locator_model = Model(inputs=inputs, outputs=concatenated_locations)
+
         self.model.compile(loss="categorical_crossentropy" if n_classes > 2 else "binary_crossentropy",
                            optimizer=self.optimizer,
                            metrics=[categorical_accuracy, categorical_crossentropy] if n_classes > 2
                            else [binary_accuracy, binary_crossentropy])
+
 
     def get_weights(self, layer_name=None):
         """Return model weights (or weights for a given layer if `layer_name` is provided).
@@ -589,6 +600,9 @@ class SerializableShapeletModel(ShapeletModel):
     ----------
     .. [1] J. Grabocka et al. Learning Time-Series Shapelets. SIGKDD 2014.
     """
+
+
+
     def __init__(self, n_shapelets_per_size,
                  max_iter=1000,
                  batch_size=256,
@@ -616,21 +630,61 @@ class SerializableShapeletModel(ShapeletModel):
     def set_params(self, **params):
         return super(SerializableShapeletModel, self).set_params(**params)
 
-    
-
-    def Save_Models(self, p_model, pb_model):
-        self.model.save(p_model)
-        pickle.dump(self.label_binarizer, open(pb_model, 'wb'))
 
 
 
-    def Load_Models(p_model, pb_model):
-        # m_model = load_model(p_model)
-        m_model = keras.models.load_model(p_model,
-                                   custom_objects={'GlobalMinPooling1D': GlobalMinPooling1D,
-                                                   'GlobalArgminPooling1D': GlobalArgminPooling1D,
-                                                   'LocalSquaredDistanceLayer': LocalSquaredDistanceLayer})
+    def Save_Models(self, mweights, binarizer):
+        self.model.save_weights(mweights)
+        pickle.dump(self.label_binarizer, open(binarizer, 'wb'))
 
-        m_label_binarizer = pickle.load(open(pb_model, 'rb'), fix_imports=True)
-        return m_model, m_label_binarizer
+
+
+    def Load_Models(self, mweights, binarizer):
+        self.model.load_weights(mweights)
+        self.label_binarizer = pickle.load(open(binarizer, 'rb'), fix_imports=True)
+
+
+
+   
+   def Nofit(self, X, y):
+        """Learn time-series shapelets.
+
+        Parameters
+        ----------
+        X : array-like of shape=(n_ts, sz, d)
+            Time series dataset.
+        y : array-like of shape=(n_ts, )
+            Time series labels.
+        """
+        set_random_seed(seed=self.random_state)
+        numpy.random.seed(seed=self.random_state)
+        n_ts, sz, d = X.shape
+        self.d = d
+        if y.ndim == 1:
+            self.label_binarizer = LabelBinarizer().fit(y)
+            y_ = self.label_binarizer.transform(y)
+        else:
+            y_ = y
+            self.categorical_y = True
+            assert y_.shape[1] != 2, "Binary classification case, monodimensional y should be passed."
+        if y_.ndim == 1:
+            n_classes = 2
+        else:
+            n_classes = y_.shape[1]
+
+        self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_classes)
+
+        self.transformer_model.compile(loss="mean_squared_error",
+                                       optimizer=self.optimizer)
+        self.locator_model.compile(loss="mean_squared_error",
+                                   optimizer=self.optimizer)
+
+        self._set_weights_false_conv(d=d)
+
+        # self.model.fit([X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)],
+        #                y_,
+        #                batch_size=self.batch_size,
+        #                epochs=self.max_iter,
+        #                verbose=self.verbose_level)
+        return self
 
