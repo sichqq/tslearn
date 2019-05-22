@@ -626,41 +626,15 @@ class SerializableShapeletModel(ShapeletModel):
 
     
 
-    def Save_Models(self, p_model, pt_model, pl_model, pb_model, pd_pkl, pc_pkl, pn_pkl):
-        # self.model = None
-        # self.transformer_model = None
-        # self.locator_model = None
-        # self.label_binarizer = None
-        # self.d = None
-        # self.categorical_y = False
-        # self.n_classes = None
+    def Save_Models(self, p_model, pb_model):
         self.model.save(p_model)
-        self.transformer_model.save(pt_model)
-        self.locator_model.save(pl_model)
-
         pickle.dump(self.label_binarizer, open(pb_model, 'wb'))
-        pickle.dump(self.d, open(pd_pkl, 'wb'))
-        pickle.dump(self.categorical_y, open(pc_pkl, 'wb'))
-        pickle.dump(self.n_classes, open(pn_pkl, 'wb'))
 
 
 
-    def Load_Models(self, p_model, pt_model, pl_model, pb_model, pd_pkl, pc_pkl, pn_pkl):
-        # self.model = None
-        # self.transformer_model = None
-        # self.locator_model = None
-        # self.label_binarizer = None
-        # self.d = None
-        # self.categorical_y = False
-        # self.n_classes = None
-        self.model = load_model(p_model)
-        #self.transformer_model = load_model(pt_model)
-        #self.locator_model = load_model(pl_model)
+    def Load_Models(self, p_model, pb_model):
+        m_model = load_model(p_model)
+        m_label_binarizer = pickle.load(open(pb_model, 'rb'), fix_imports=True)
+        return m_model, m_label_binarizer
 
-        self.label_binarizer = pickle.load(open(pb_model, 'rb'), fix_imports=True)
-        self.d = pickle.load(open(pd_pkl, 'rb'), fix_imports=True)
-        self.categorical_y = pickle.load(open(pc_pkl, 'rb'), fix_imports=True)
-        self.n_classes = pickle.load(open(pn_pkl, 'rb'), fix_imports=True)
    
-
-    
