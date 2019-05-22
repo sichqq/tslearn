@@ -40,7 +40,7 @@ pip install tslearn
 
 If you want to get `tslearn`'s latest version, you can refer to the repository hosted at github:
 ```bash
-pip install git+https://github.com/rtavenar/tslearn.git
+pip install git+https://github.com/sichqq/tslearn.git
 ```
 
 ## Troubleshooting
