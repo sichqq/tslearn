@@ -102,7 +102,7 @@ class LocalSquaredDistanceLayer(Layer):
         3D tensor with shape:
         `(batch_size, steps, n_shapelets)`
     """
-    def __init__(self, n_shapelets, X=None, **kwargs):
+    def __init__(self, n_shapelets=1, X=None, **kwargs):
         self.n_shapelets = n_shapelets
         if X is None or K._BACKEND != "tensorflow":
             self.initializer = "uniform"
@@ -173,14 +173,6 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
         n_shapelets = int(numpy.log10(n_ts * (ts_sz - shp_sz + 1) * (n_classes - 1)))
         d[shp_sz] = n_shapelets
     return d
-
-
-
-def load_model(filename):
-    return keras.models.load_model(filename,
-                                   custom_objects={'GlobalMinPooling1D': GlobalMinPooling1D,
-                                                   'LocalSquaredDistanceLayer': LocalSquaredDistanceLayer})
-
 
 
 
@@ -632,9 +624,13 @@ class SerializableShapeletModel(ShapeletModel):
 
 
 
-    def Load_Models(self, p_model, pb_model):
-        m_model = load_model(p_model)
+    def Load_Models(p_model, pb_model):
+        # m_model = load_model(p_model)
+        m_model = keras.models.load_model(p_model,
+                                   custom_objects={'GlobalMinPooling1D': GlobalMinPooling1D,
+                                                   'GlobalArgminPooling1D': GlobalArgminPooling1D,
+                                                   'LocalSquaredDistanceLayer': LocalSquaredDistanceLayer})
+
         m_label_binarizer = pickle.load(open(pb_model, 'rb'), fix_imports=True)
         return m_model, m_label_binarizer
 
-   
