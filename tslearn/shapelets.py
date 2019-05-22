@@ -645,8 +645,8 @@ class SerializableShapeletModel(ShapeletModel):
 
 
 
-   
-   def Nofit(self, X, y):
+
+    def NO_fit(self, X, y):
         """Learn time-series shapelets.
 
         Parameters
@@ -671,20 +671,10 @@ class SerializableShapeletModel(ShapeletModel):
             n_classes = 2
         else:
             n_classes = y_.shape[1]
-
         self._set_model_layers(X=X, ts_sz=sz, d=d, n_classes=n_classes)
-
         self.transformer_model.compile(loss="mean_squared_error",
                                        optimizer=self.optimizer)
         self.locator_model.compile(loss="mean_squared_error",
                                    optimizer=self.optimizer)
-
         self._set_weights_false_conv(d=d)
-
-        # self.model.fit([X[:, :, di].reshape((n_ts, sz, 1)) for di in range(d)],
-        #                y_,
-        #                batch_size=self.batch_size,
-        #                epochs=self.max_iter,
-        #                verbose=self.verbose_level)
         return self
-
