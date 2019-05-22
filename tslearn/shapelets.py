@@ -654,8 +654,8 @@ class SerializableShapeletModel(ShapeletModel):
         # self.categorical_y = False
         # self.n_classes = None
         self.model = load_model(p_model)
-        self.transformer_model = load_model(pt_model)
-        self.locator_model = load_model(pl_model)
+        #self.transformer_model = load_model(pt_model)
+        #self.locator_model = load_model(pl_model)
 
         self.label_binarizer = pickle.load(open(pb_model, 'rb'), fix_imports=True)
         self.d = pickle.load(open(pd_pkl, 'rb'), fix_imports=True)
