@@ -3,8 +3,9 @@ The :mod:`tslearn.shapelets` module gathers Shapelet-based algorithms.
 
 It depends on the `keras` library for optimization.
 """
-
+import pickle
 from keras.models import Model
+from keras.models import load_model
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy, binary_accuracy, binary_crossentropy
 from sklearn.preprocessing import LabelBinarizer
@@ -612,3 +613,44 @@ class SerializableShapeletModel(ShapeletModel):
 
     def set_params(self, **params):
         return super(SerializableShapeletModel, self).set_params(**params)
+
+    
+
+    def Save_Models(self, p_model, pt_model, pl_model, pb_model, pd_pkl, pc_pkl, pn_pkl):
+        # self.model = None
+        # self.transformer_model = None
+        # self.locator_model = None
+        # self.label_binarizer = None
+        # self.d = None
+        # self.categorical_y = False
+        # self.n_classes = None
+        self.model.save(p_model)
+        self.transformer_model.save(pt_model)
+        self.locator_model.save(pl_model)
+
+        pickle.dump(self.label_binarizer, open(pb_model, 'wb'))
+        pickle.dump(self.d, open(pd_pkl, 'wb'))
+        pickle.dump(self.categorical_y, open(pc_pkl, 'wb'))
+        pickle.dump(self.n_classes, open(pn_pkl, 'wb'))
+
+
+
+    def Load_Models(self, p_model, pt_model, pl_model, pb_model, pd_pkl, pc_pkl, pn_pkl):
+        # self.model = None
+        # self.transformer_model = None
+        # self.locator_model = None
+        # self.label_binarizer = None
+        # self.d = None
+        # self.categorical_y = False
+        # self.n_classes = None
+        self.model = load_model(p_model)
+        self.transformer_model = load_model(pt_model)
+        self.locator_model = load_model(pl_model)
+
+        self.label_binarizer = pickle.load(open(pb_model, 'rb'), fix_imports=True)
+        self.d = pickle.load(open(pd_pkl, 'rb'), fix_imports=True)
+        self.categorical_y = pickle.load(open(pc_pkl, 'rb'), fix_imports=True)
+        self.n_classes = pickle.load(open(pn_pkl, 'rb'), fix_imports=True)
+   
+
+    
