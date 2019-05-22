@@ -5,7 +5,6 @@ It depends on the `keras` library for optimization.
 """
 import pickle
 from keras.models import Model
-from keras.models import load_model
 from keras.layers import Dense, Conv1D, Layer, Input, concatenate, add
 from keras.metrics import categorical_accuracy, categorical_crossentropy, binary_accuracy, binary_crossentropy
 from sklearn.preprocessing import LabelBinarizer
@@ -173,6 +172,16 @@ def grabocka_params_to_shapelet_size_dict(n_ts, ts_sz, n_classes, l, r):
         n_shapelets = int(numpy.log10(n_ts * (ts_sz - shp_sz + 1) * (n_classes - 1)))
         d[shp_sz] = n_shapelets
     return d
+
+
+
+def load_model(filename):
+    return keras.models.load_model(filename,
+                                   custom_objects={'GlobalMinPooling1D': GlobalMinPooling1D,
+                                                   'LocalSquaredDistanceLayer': LocalSquaredDistanceLayer})
+
+
+
 
 
 class ShapeletModel(BaseEstimator, ClassifierMixin):
