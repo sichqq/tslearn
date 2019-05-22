@@ -633,15 +633,16 @@ class SerializableShapeletModel(ShapeletModel):
 
 
 
-    def Save_Models(self, mweights, binarizer):
+
+    def Save_Models(self, mweights):
         self.model.save_weights(mweights)
-        pickle.dump(self.label_binarizer, open(binarizer, 'wb'))
+ 
 
 
-
-    def Load_Models(self, mweights, binarizer):
+    def Load_Models(self, mweights):
         self.model.load_weights(mweights)
-        self.label_binarizer = pickle.load(open(binarizer, 'rb'), fix_imports=True)
+
+
 
 
 
